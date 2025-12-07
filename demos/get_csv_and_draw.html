@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://unpkg.com/@visactor/vchart/build/index.min.js"></script>
+    <script src="https://unpkg.com/@visactor/vtable/dist/vtable.min.js"></script>
+    <script src="https://unpkg.com/@visactor/vseed/dist/umd/index.js"></script>
+</head>
+
+<body>
+    <input type="file" id="uploadCsv" accept=".csv" />
+    <h1>Vchart</h1>
+    <div id="container-vchart"></div>
+
+    <h1>Vtable</h1>
+    <div id="container-vtable" style="width: 600px; height: 400px;"></div>
+
+
+    <script>
+        const callback = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const text = e.target.result;
+                console.log('debug text', text)
+                displayCSV(text);
+            };
+            reader.readAsText(file);
+        }
+        document.getElementById('uploadCsv').addEventListener('change', callback);
+
+        const displayCSV = (text) => {
+            const lines = text.trim().split('\r\n');
+            const headers = lines[0].split(',');
+            const records = lines.slice(1).map(line => {
+                const values = line.split(',');
+                return headers.reduce((obj, header, index) => {
+                    obj[header] = values[index];
+                    return obj;
+                }, {});
+            });
+            window.CSVDATA = {
+                records,
+                headers
+            };
+
+            console.log('debug records', records);
+
+            // 更新VTable数据
+            const vtableSpec = {
+                records: records,
+                columns: headers.map(header => ({
+                    field: header,
+                    title: header
+                })),
+                widthMode: 'adaptive'
+            };
+            const tableInstance = new VTable.ListTable(document.querySelector('#container-vtable'), vtableSpec);
+
+
+            const vchartSpec = {
+                data: [
+                    {
+                        id: 'barData',
+                        values: records
+                    }
+                ],
+                type: 'line',
+                xField: headers[0],
+                yField: headers[1],
+                seriesField: headers[2]
+            };
+            const vchart = new VChart.VChart(vchartSpec, { dom: 'container-vchart' });
+            vchart.renderSync();
+        };
+    </script>
+</body>
+
+</html>

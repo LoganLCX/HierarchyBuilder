@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VSeed Visualization</title>
+    <script src="./node_modules/@visactor/vchart/build/index.min.js"></script>
+    <script src="./node_modules/@visactor/vseed/dist/umd/index.js"></script>
+</head>
+
+<body>
+    <div style="margin: 20px;">
+        <button id="btn-treemap">Treemap</button>
+        <button id="btn-sunburst">Sunburst</button>
+        <button id="btn-circlepacking">Circle Packing</button>
+    </div>
+    <div id="chart" style="width: 800px; height: 600px;"></div>
+
+    <script src="./HierarchyBuilder.js"></script>
+    <script src="./my_VSeed.js"></script>
+</body>
+
+</html>

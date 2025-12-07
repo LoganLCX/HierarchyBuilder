@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://unpkg.com/@visactor/vchart/build/index.min.js"></script>
+    <script src="https://unpkg.com/@visactor/vtable/dist/vtable.min.js"></script>
+    <script src="https://unpkg.com/@visactor/vseed/dist/umd/index.js"></script>
+</head>
+
+<body>
+    <input type="file" id="uploadCsv" accept=".csv" />
+    <div>
+        <button id="render-vchart">LineChart</button>
+        <button id="render-vtable">Table</button>
+        <div id="chart"></div>
+
+    </div>
+
+
+    <script>
+        const callback = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const text = e.target.result;
+                console.log('debug text', text)
+                displayCSV(text);
+            };
+            reader.readAsText(file);
+        }
+        document.getElementById('uploadCsv').addEventListener('change', callback);
+
+        const displayCSV = (text) => {
+            const lines = text.trim().split('\r\n');
+            const headers = lines[0].split(',');
+            const records = lines.slice(1).map(line => {
+                const values = line.split(',');
+                return headers.reduce((obj, header, index) => {
+                    obj[header] = values[index];
+                    return obj;
+                }, {});
+            });
+            window.CSVDATA = {
+                records,
+                headers
+            };
+
+            console.log('debug records', records);
+
+            // generate spec with vseed
+            const vseed = {
+                chartType: 'columnParallel',
+                dataset: records,
+                measures: [{ id: headers[1] }, { id: headers[2] }],
+                dimensions: [{ id: headers[0] }]
+            }
+            VSeed.registerAll();
+            const spec = VSeed.Builder.from(vseed).build();
+
+            if (['table', 'pivotTable'].includes(vseed.chartType)) {
+                const tableInstance = new VTable.ListTable(document.querySelector('#chart'), spec);
+            } else {
+                const vchart = new VChart.VChart(spec, { dom: 'chart' });
+                vchart.renderSync();
+            };
+        }
+    </script>
+</body>
+
+</html>

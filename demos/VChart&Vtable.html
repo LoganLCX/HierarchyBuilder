@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://unpkg.com/@visactor/vchart/build/index.min.js"></script>
+    <script src="https://unpkg.com/@visactor/vtable/dist/vtable.min.js"></script>
+    <script src="https://unpkg.com/@visactor/vseed/dist/umd/index.js"></script>
+</head>
+
+<body>
+    <h1>Vchart</h1>
+    <div id="container_vchart"></div>
+    <script>
+        const vChartSpec = {
+            data: [
+                {
+                    id: 'barData',
+                    values: [
+                        { month: 'Monday', sales: 22 },
+                        { month: 'Tuesday', sales: 13 },
+                        { month: 'Wednesday', sales: 25 },
+                        { month: 'Thursday', sales: 29 },
+                        { month: 'Friday', sales: 38 }
+                    ]
+                }
+            ],
+            type: 'line',
+            xField: 'month',
+            yField: 'sales'
+        };
+        const vchart = new VChart.VChart(vChartSpec, { dom: 'container_vchart' });
+        vchart.renderSync();
+    </script>
+
+    <h1>Vtable</h1>
+    <div id="container_vtable" style="width: 600px; height: 400px;"></div>
+    <script>
+        const vTableSpec = {
+            records: [
+                { month: 'Monday', sales: 22 },
+                { month: 'Tuesday', sales: 13 },
+                { month: 'Wednesday', sales: 25 },
+                { month: 'Thursday', sales: 29 },
+                { month: 'Friday', sales: 38 }
+            ],
+            columns: [
+                {
+                    field: 'month',
+                    title: 'Month',
+                },
+                {
+                    field: 'sales',
+                    title: 'Sales'
+                }
+            ],
+            widthMode: 'adaptive'
+        };
+        const vtable = new VTable.ListTable(document.querySelector('#container_vtable'), vTableSpec);
+    </script>
+</body>
+
+</html>
