@@ -42,11 +42,11 @@ const vseed = {
     measure: 'value'
 };
 
-// 3. 调用 HierarchyBuilder
-const result = executeAdvancedPipeline(vseed);
+// 3. 生成图表规范
+const spec = HierarchyBuilder.from(vseed).build();
 
 // 4. 使用 VChart 渲染
-const vchart = new VChart(result.spec, { dom: 'chart' });
+const vchart = new VChart(spec, { dom: 'chart' });
 vchart.renderAsync();
 ```
 
@@ -56,11 +56,13 @@ vchart.renderAsync();
 const vseed = {
     chartType: 'treemap',
     dataset: salesData,
-    dimensions: ['region', 'category', 'product'],
-    measure: 'sales'
+    dimensions: ['region', 'category', 'product'], // 可选
+    measure: 'sales' // 可选
 };
 
-const result = executeAdvancedPipeline(vseed);
+const spec = HierarchyBuilder.from(vseed).build();
+const vchart = new VChart(spec, { dom: 'chart' });
+vchart.renderAsync();
 ```
 
 ### Sunburst 示例
@@ -73,7 +75,9 @@ const vseed = {
     measure: 'headcount'
 };
 
-const result = executeAdvancedPipeline(vseed);
+const spec = HierarchyBuilder.from(vseed).build();
+const vchart = new VChart(spec, { dom: 'chart' });
+vchart.renderAsync();
 ```
 
 ### Circle Packing 示例
@@ -86,7 +90,9 @@ const vseed = {
     measure: 'size'
 };
 
-const result = executeAdvancedPipeline(vseed);
+const spec = HierarchyBuilder.from(vseed).build();
+const vchart = new VChart(spec, { dom: 'chart' });
+vchart.renderAsync();
 ```
 
 ##  配置选项
