@@ -48,6 +48,8 @@ const identifyFields = (advancedVSeed, context) => {
 
     // 确定维度字段
     let dimensionFields;
+    let isZeroDimension = false;  // 标记是否为零维度场景
+
     if (vseed.dimensions && Array.isArray(vseed.dimensions)) {
         // 用户指定了 dimensions，只使用指定的
         dimensionFields = vseed.dimensions;
@@ -66,22 +68,34 @@ const identifyFields = (advancedVSeed, context) => {
         dimensionFields = allFields.filter(field => field !== measureField);
     }
 
+    // 零维度场景处理
     if (dimensionFields.length === 0) {
-        throw new Error('Must have at least one dimension field');
+        if (numericFields.length === 1) {
+            // 0维度1指标：凭空创造一个虚拟维度
+            console.log('检测到零维度单指标场景，创建虚拟维度');
+            isZeroDimension = true;
+            dimensionFields = ['__VirtualCategory__'];  // 虚拟维度名称
+        } else {
+            // 0维度多指标：将其他数值字段转为维度（原有逻辑）
+            console.log('检测到零维度多指标场景，将指标名称作为维度');
+            dimensionFields = ['__MeasureName__'];
+        }
     }
 
     console.log('字段识别结果:', {
         allFields,
         numericFields,
         measureField,
-        dimensionFields
+        dimensionFields,
+        isZeroDimension
     });
 
     return {
         ...advancedVSeed,
         dimensionFields,
         measureField,
-        numericFields
+        numericFields,
+        isZeroDimension  // 传递标记
     };
 };
 
@@ -155,10 +169,62 @@ const buildLabelConfig = (advancedVSeed, context) => {
 
 // Spec Pipeline - 生成 VChart 配置
 const buildTreeData = (spec, context) => {
-    const { advancedVSeed } = context;
-    const { dataset, dimensions, measureField } = advancedVSeed;
+    const { advancedVSeed, vseed } = context;
+    const { dataset, dimensions, measureField, isZeroDimension, numericFields } = advancedVSeed;
 
-    // 递归构建树结构
+    // 处理零维度单指标场景
+    if (isZeroDimension) {
+        // 用户可以自定义虚拟分类名称生成函数
+        const categoryNameFn = vseed.virtualCategoryName ||
+            ((row, index) => `Item ${index + 1}`);
+
+        const transformedData = dataset.map((row, index) => ({
+            __VirtualCategory__: categoryNameFn(row, index),
+            [measureField]: row[measureField]
+        }));
+
+        const treeData = {
+            name: 'root',
+            children: transformedData.map(row => ({
+                name: row.__VirtualCategory__,
+                value: row[measureField]
+            }))
+        };
+
+        console.log('零维度单指标场景，构建的树结构:', JSON.stringify(treeData, null, 2));
+
+        return {
+            ...spec,
+            data: [{
+                id: 'data',
+                values: [treeData]
+            }]
+        };
+    }
+
+    // 处理零维度多指标场景（将指标名作为维度）
+    if (dimensions[0].id === '__MeasureName__') {
+        // 将多个指标展开为树结构
+        const treeData = {
+            name: 'root',
+            children: numericFields.map(field => ({
+                name: field,
+                value: dataset.reduce((sum, row) => sum + (row[field] || 0), 0)
+            }))
+        };
+
+        console.log('零维度多指标场景，构建的树结构:', JSON.stringify(treeData, null, 2));
+
+        return {
+            ...spec,
+            data: [{
+                id: 'data',
+                values: [treeData]
+            }]
+        };
+    }
+
+    // 递归构建树结构（正常的多维度场景）
     const buildTree = (data, dimIndex) => {
         if (dimIndex >= dimensions.length) {
             // 已经处理完所有维度
@@ -203,7 +269,7 @@ const buildTreeData = (spec, context) => {
         children: buildTree(dataset, 0)
     };
 
-    console.log('构建的树结构:', JSON.stringify(treeData, null, 2));
+    console.log('正常场景，构建的树结构:', JSON.stringify(treeData, null, 2));
 
     return {
         ...spec,
